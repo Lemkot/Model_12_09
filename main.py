@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 17 21:40:41 2020
-
-@author: win10
+API finance
 """
 
 # 1. Library imports
@@ -22,27 +20,54 @@ app = FastAPI()
 @app.get('/')
 async def price():
     try:        
-        # Define the ticker symbol of the stock you want to fetch data for
-        ticker_symbol = 'AAPL'
         
-        # Create a Yahoo Finance ticker object
-        stock = yf.Ticker(ticker_symbol)
+        # Create a Yahoo Finance ticker objects
+        stock_SP = yf.Ticker('^SPX')
+        stock_10y_futures = yf.Ticker('ZNZ23.CBT')
+        stock_3m_interest = yf.Ticker('^IRX')
+        stock_10y_interest = yf.Ticker('^TNX')
+        stock_vix_index = yf.Ticker('^VIX')
         
-        # Fetch historical data for the stock
-        historical_data = stock.history(period='1y')  # Adjust the period as needed
+        # Fetch historical data for the stocks
+        historical_data_SP = stock_SP.history(period='1y')
+        historical_data_10y_futures = stock_10y_futures.history(period='1y')
+        historical_data_3m_interest = stock_3m_interest.history(period='1y')
+        historical_data_10y_interest = stock_10y_interest.history(period='1y')
+        historical_data_vix_index = stock_vix_index.history(period='1y')
         
-        # Extract the most recent closing price
-        prices = historical_data['Close']
+        # Extract the most recent closing prices
+        prices_SP = historical_data_SP['Close']
+        prices_10y_futures = historical_data_10y_futures['Close']
+        prices_3m_interest = historical_data_3m_interest['Close']
+        prices_10y_interest = historical_data_10y_interest['Close']
+        prices_vix_index = historical_data_vix_index['Close']
         
         # Fit an ARIMA model to the training data
         order = (5, 1, 0)  # Example order for ARIMA (p, d, q)
-        model = ARIMA(prices, order=order)
-        model_fit = model.fit()
         
-        # Forecast the next day's price
-        forecasted_value_next_day = model_fit.forecast(steps=1).iloc[0]
+        model_SP = ARIMA(prices_SP, order=order)
+        model_fit_SP = model_SP.fit()
         
-        return {"ticker": ticker_symbol, "forecasted_price": float(forecasted_value_next_day)}
+        model_10y_futures = ARIMA(prices_10y_futures, order=order)
+        model_fit_10y_futures = model_10y_futures.fit()
+        
+        model_3m_interest = ARIMA(prices_3m_interest, order=order)
+        model_fit_3m_interest = model_3m_interest.fit()
+        
+        model_10y_interest = ARIMA(prices_10y_interest, order=order)
+        model_fit_10y_interest = model_10y_interest.fit()
+        
+        model_vix_index = ARIMA(prices_vix_index, order=order)
+        model_fit_vix_index = model_vix_index.fit()
+        
+        # Forecast the next day's prices
+        forecast_SP = model_fit_SP.forecast(steps=1).iloc[0]
+        forecast_10y_futures = model_fit_10y_futures.forecast(steps=1).iloc[0]
+        forecast_3m_interest = model_fit_3m_interest.forecast(steps=1).iloc[0]
+        forecast_10y_interest = model_fit_10y_interest.forecast(steps=1).iloc[0]
+        forecast_vix_index = model_fit_vix_index.forecast(steps=1).iloc[0]
+        
+        return {"forecasted_SP_index": float(forecast_SP), "forecasted_10y_futures": float(forecast_10y_futures),"forecasted_3m_interest": float(forecast_3m_interest), "forecasted_10y_interest": float(forecast_10y_interest), "forecasted_vix_index": float(forecast_vix_index)}
 
     except Exception as e:
         return {"error": str(e)}
